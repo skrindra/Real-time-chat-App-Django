@@ -1,0 +1,105 @@
+{% extends 'chatapp/base.html' %}
+
+{% block body %}
+    
+
+    <!-- displaying the messages incoming from the socket-->
+    <div class="flex flex-col items-center justify-center pb-20">
+        <h4 class="text-2xl text-blue-500 font-bold m-5">{{ chatroom.name }}</h4>
+        <div class="w-full max-w-md mx-auto p-4 flex-grow">
+          <div id="chat-messages" class="overflow-auto h-[525px] bg-gray-500 p-4 rounded">
+            {% for message in messages %}
+            <div class="message p-2 mb-2 bg-blue-200 rounded">
+              <div class="text-sm font-semibold text-gray-600">{{ message.user.username }}</div>
+              <div class="text-lg text-black">{{ message.message_content }}</div>
+              <div class="text-xs text-gray-400">{{ message.date }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      
+        <form method="post" class="bg-pink rounded-full fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto p-4">
+          {% csrf_token %}
+          <div class="flex">
+            <input id="message-input" type="text" placeholder="Type your message here" class="flex-1 px-3 py-2 rounded-l-lg border border-gray-400 focus:outline-none focus:border-blue-500">
+            <button id="send-button" type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600">
+                <img class="h-7 w-7" src="https://cdn0.iconfinder.com/data/icons/freebies-2/24/send-email-2-512.png" alt="">
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      
+    
+
+    <!-- Accessing room name & creating a socket & connection -->
+    {{ chatroom.slug|json_script:"json-chatroomname" }}
+    {{ request.user.username |json_script:"json-username" }}
+
+    <script>
+        const chatRoomName = JSON.parse(document.getElementById('json-chatroomname').textContent)
+        const username = JSON.parse(document.getElementById('json-username').textContent)
+        // console.log(chatRoomName);
+
+        const chatSocket = new WebSocket(
+            'ws://'
+            +window.location.host
+            +'/ws/'
+            +chatRoomName
+            +'/'
+        );
+
+        chatSocket.onmessage= function(e){
+            // console.log('This is a message')
+            // receiving from socket
+            const data = JSON.parse(e.data) 
+            if(data.message){
+                // console.log('Received message to client is', data.message)
+                let html = '<div class="message p-2 mb-2 bg-blue-200 rounded">' +
+                                '<div class="text-sm font-semibold text-gray-600">' + data.username + '</div>' +
+                                '<div class="text-lg text-black">' + data.message + '</div>' + 
+                                '<div class="text-xs text-gray-400">' + 'now' + '</div>' +
+                            '</div>'
+
+
+                // append message to the inner html
+                document.getElementById('chat-messages').innerHTML += html
+                scroll()
+            }
+            else{
+                alert('The message was empty')
+            }
+
+        }
+        chatSocket.onclose= function(e){
+            console.log('Socket closed')
+        }
+
+        document.getElementById('send-button').onclick = function(e){
+            // prevent default refresh behaviour on button press
+            e.preventDefault()
+
+            // access the value in the input field
+            const messageInput = document.getElementById('message-input')
+            const message = messageInput.value
+            console.log(message)
+
+            // convert the message to JSON before sending to socket
+            chatSocket.send(JSON.stringify({
+                'message':message,
+                'username':username,
+                'room':chatRoomName,
+            }))
+
+            // reset the input field to empty
+            messageInput.value = ''
+        }
+
+        function scroll(){
+            const mcontainer = document.getElementById('chat-messages')
+            mcontainer.scrollTop = mcontainer.scrollHeight
+        }
+
+    </script>
+
+{% endblock %}

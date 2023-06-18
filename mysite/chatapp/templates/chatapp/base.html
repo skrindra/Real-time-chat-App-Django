@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- custom css -->
+    <link rel="stylesheet" href="{% static 'chatapp/style.css' %}">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>Document</title>
+</head>
+<body>
+    <nav class="shadow-lg p-1 flex flex-wrap justify-between items-center">
+        <div class="flex nav-brand p-3 pl-5">
+          <img class="h-10 w-10" src="https://cdn4.iconfinder.com/data/icons/essentials-71/24/003_-_Chat-256.png" alt="">
+          <a class="p-3 text-xl" href="">WhatChat</a>
+        </div>
+      
+        <div class="p-3 mt-3 space-x-2 bg-blue-500 mb-3 rounded flex">
+          {% if request.user.is_authenticated %}
+          <button class="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+            {{ request.user.username }}
+          </button>
+          <a href="{% url 'logout' %}">
+            <button class="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+              Logout
+            </button>
+          </a>
+          {% else %}
+          <a href="{% url 'login' %}">
+            <button class="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+              Sign-In
+            </button>
+          </a>
+          <a href="{% url 'register' %}">
+            <button class="px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+              Sign-Up
+            </button>
+          </a>
+          {% endif %}
+        </div>
+      
+        <div class="p-3 mt-3 mr-10 space-x-2 bg-blue-500 mb-3 rounded flex">
+          <div class="p-2 bg-pink-500 text-white hover:bg-pink-600 active:bg-pink-800 rounded">
+            <a href="{% url 'index'%}">Rooms</a>
+          </div>
+          <div class="p-2 bg-blue-500 group-hover:bg-blue-600">
+            <a href="">Messages</a>
+          </div>
+        </div>
+      </nav>
+      
+      
+    {% block body %}
+
+    {% endblock %}
+</body>
+</html>
